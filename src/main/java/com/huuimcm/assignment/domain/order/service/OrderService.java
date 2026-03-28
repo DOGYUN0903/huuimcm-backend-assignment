@@ -4,6 +4,8 @@ import com.huuimcm.assignment.domain.order.dto.request.OrderCreateRequest;
 import com.huuimcm.assignment.domain.order.dto.response.OrderCreateResponse;
 import com.huuimcm.assignment.domain.order.dto.response.OrderListResponse;
 import com.huuimcm.assignment.domain.order.entity.Order;
+import com.huuimcm.assignment.domain.order.exception.OrderErrorCode;
+import com.huuimcm.assignment.domain.order.exception.OrderException;
 import com.huuimcm.assignment.domain.order.repository.OrderRepository;
 import com.huuimcm.assignment.domain.product.entity.Product;
 import com.huuimcm.assignment.domain.product.service.ProductService;
@@ -50,5 +52,19 @@ public class OrderService {
         User user = userService.authenticate(loginId, loginPw);
         Page<Order> orders = orderRepository.findOrdersByUserId(user.getId(), PageRequest.of(page, size));
         return orders.map(OrderListResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderListResponse getOrder(String loginId, String loginPw, Long orderId) {
+        User user = userService.authenticate(loginId, loginPw);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new OrderException(OrderErrorCode.ORDER_ACCESS_DENIED);
+        }
+
+        return OrderListResponse.from(order);
     }
 }
