@@ -43,6 +43,12 @@ public class UserService {
         return UserInfoResponse.from(user);
     }
 
+    @Transactional
+    public void changePassword(String loginId, String loginPw, String newPassword) {
+        User user = authenticate(loginId, loginPw);
+        user.changePassword(passwordEncoder.encode(newPassword));
+    }
+
     /**
      * X-Huuim-LoginId, X-Huuim-LoginPw 헤더를 통해 사용자를 식별합니다.
      * 인증/인가는 주요 스코프가 아니므로 인터셉터 대신 서비스 메서드로 처리하였습니다.

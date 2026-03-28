@@ -32,4 +32,8 @@ public class User extends BaseEntity {
     public static User create(String loginId, String loginPw, String name) {
         return new User(loginId, loginPw, name);
     }
+
+    public void changePassword(String encodedPassword) {
+        this.loginPw = encodedPassword;
+    }
 }
