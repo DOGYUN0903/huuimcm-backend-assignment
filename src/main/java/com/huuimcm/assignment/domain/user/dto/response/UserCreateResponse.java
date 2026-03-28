@@ -1,4 +1,4 @@
-package com.huuimcm.assignment.domain.user.dto;
+package com.huuimcm.assignment.domain.user.dto.response;
 
 import com.huuimcm.assignment.domain.user.entity.User;
 

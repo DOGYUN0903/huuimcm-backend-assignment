@@ -1,4 +1,4 @@
-package com.huuimcm.assignment.domain.user.dto;
+package com.huuimcm.assignment.domain.user.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

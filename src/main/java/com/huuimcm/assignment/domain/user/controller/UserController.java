@@ -1,7 +1,7 @@
 package com.huuimcm.assignment.domain.user.controller;
 
-import com.huuimcm.assignment.domain.user.dto.UserCreateRequest;
-import com.huuimcm.assignment.domain.user.dto.UserCreateResponse;
+import com.huuimcm.assignment.domain.user.dto.request.UserCreateRequest;
+import com.huuimcm.assignment.domain.user.dto.response.UserCreateResponse;
 import com.huuimcm.assignment.domain.user.service.UserService;
 import com.huuimcm.assignment.global.response.ApiResponse;
 import jakarta.validation.Valid;

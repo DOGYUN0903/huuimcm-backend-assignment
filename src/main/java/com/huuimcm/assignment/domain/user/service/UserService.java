@@ -1,7 +1,7 @@
 package com.huuimcm.assignment.domain.user.service;
 
-import com.huuimcm.assignment.domain.user.dto.UserCreateRequest;
-import com.huuimcm.assignment.domain.user.dto.UserCreateResponse;
+import com.huuimcm.assignment.domain.user.dto.request.UserCreateRequest;
+import com.huuimcm.assignment.domain.user.dto.response.UserCreateResponse;
 import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.exception.UserErrorCode;
 import com.huuimcm.assignment.domain.user.exception.UserException;
