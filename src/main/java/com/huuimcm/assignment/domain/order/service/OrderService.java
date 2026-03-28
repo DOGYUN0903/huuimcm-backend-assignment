@@ -2,6 +2,7 @@ package com.huuimcm.assignment.domain.order.service;
 
 import com.huuimcm.assignment.domain.order.dto.request.OrderCreateRequest;
 import com.huuimcm.assignment.domain.order.dto.response.OrderCreateResponse;
+import com.huuimcm.assignment.domain.order.dto.response.OrderListResponse;
 import com.huuimcm.assignment.domain.order.entity.Order;
 import com.huuimcm.assignment.domain.order.repository.OrderRepository;
 import com.huuimcm.assignment.domain.product.entity.Product;
@@ -10,6 +11,8 @@ import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,5 +43,12 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
         return OrderCreateResponse.from(savedOrder);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderListResponse> getOrders(String loginId, String loginPw, int page, int size) {
+        User user = userService.authenticate(loginId, loginPw);
+        Page<Order> orders = orderRepository.findOrdersByUserId(user.getId(), PageRequest.of(page, size));
+        return orders.map(OrderListResponse::from);
     }
 }
