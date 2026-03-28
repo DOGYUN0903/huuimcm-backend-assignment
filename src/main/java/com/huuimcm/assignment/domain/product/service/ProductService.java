@@ -53,6 +53,12 @@ public class ProductService {
     }
 
     @Transactional
+    public Product getProductWithLock(Long productId) {
+        return productRepository.findByIdWithPessimisticLock(productId)
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    @Transactional
     public void increaseLikeCount(Long productId) {
         productRepository.increaseLikeCount(productId);
     }

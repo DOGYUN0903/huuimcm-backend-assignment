@@ -5,6 +5,7 @@ import com.huuimcm.assignment.domain.product.repository.ProductRepositoryCustom;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.huuimcm.assignment.domain.product.entity.QProduct.product;
 
@@ -53,6 +55,17 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
                 .set(product.likeCount, product.likeCount.subtract(1))
                 .where(product.id.eq(productId), product.likeCount.gt(0))
                 .execute();
+    }
+
+    @Override
+    public Optional<Product> findByIdWithPessimisticLock(Long productId) {
+        return Optional.ofNullable(
+                queryFactory
+                        .selectFrom(product)
+                        .where(product.id.eq(productId))
+                        .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                        .fetchOne()
+        );
     }
 
     private OrderSpecifier<?> getOrderSpecifier(String sortBy) {

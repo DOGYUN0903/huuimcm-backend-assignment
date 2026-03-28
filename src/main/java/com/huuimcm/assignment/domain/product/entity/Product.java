@@ -1,5 +1,7 @@
 package com.huuimcm.assignment.domain.product.entity;
 
+import com.huuimcm.assignment.domain.product.exception.ProductErrorCode;
+import com.huuimcm.assignment.domain.product.exception.ProductException;
 import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -51,5 +53,12 @@ public class Product extends BaseEntity {
 
     public static Product create(User seller, String name, String description, Long price, Integer stock, String brand) {
         return new Product(seller, name, description, price, stock, brand);
+    }
+
+    public void decreaseStock(int quantity) {
+        if (this.stock < quantity) {
+            throw new ProductException(ProductErrorCode.INSUFFICIENT_STOCK);
+        }
+        this.stock -= quantity;
     }
 }
