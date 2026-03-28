@@ -37,6 +37,24 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
+    @Override
+    public void increaseLikeCount(Long productId) {
+        queryFactory
+                .update(product)
+                .set(product.likeCount, product.likeCount.add(1))
+                .where(product.id.eq(productId))
+                .execute();
+    }
+
+    @Override
+    public void decreaseLikeCount(Long productId) {
+        queryFactory
+                .update(product)
+                .set(product.likeCount, product.likeCount.subtract(1))
+                .where(product.id.eq(productId), product.likeCount.gt(0))
+                .execute();
+    }
+
     private OrderSpecifier<?> getOrderSpecifier(String sortBy) {
         return switch (sortBy) {
             case "price_asc" -> product.price.asc();

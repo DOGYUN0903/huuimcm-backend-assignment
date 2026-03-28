@@ -4,6 +4,8 @@ import com.huuimcm.assignment.domain.product.dto.request.ProductCreateRequest;
 import com.huuimcm.assignment.domain.product.dto.response.ProductCreateResponse;
 import com.huuimcm.assignment.domain.product.dto.response.ProductListResponse;
 import com.huuimcm.assignment.domain.product.entity.Product;
+import com.huuimcm.assignment.domain.product.exception.ProductErrorCode;
+import com.huuimcm.assignment.domain.product.exception.ProductException;
 import com.huuimcm.assignment.domain.product.repository.ProductRepository;
 import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
@@ -42,5 +44,21 @@ public class ProductService {
     public PageResponse<ProductListResponse> getProducts(String sort, int page, int size) {
         Page<Product> products = productRepository.findProducts(PageRequest.of(page, size), sort);
         return new PageResponse<>(products.map(ProductListResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public Product getProduct(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    @Transactional
+    public void increaseLikeCount(Long productId) {
+        productRepository.increaseLikeCount(productId);
+    }
+
+    @Transactional
+    public void decreaseLikeCount(Long productId) {
+        productRepository.decreaseLikeCount(productId);
     }
 }

@@ -7,4 +7,8 @@ import org.springframework.data.domain.Pageable;
 public interface ProductRepositoryCustom {
 
     Page<Product> findProducts(Pageable pageable, String sortBy);
+
+    void increaseLikeCount(Long productId);
+
+    void decreaseLikeCount(Long productId);
 }
