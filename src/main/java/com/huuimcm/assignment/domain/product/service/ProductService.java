@@ -2,11 +2,15 @@ package com.huuimcm.assignment.domain.product.service;
 
 import com.huuimcm.assignment.domain.product.dto.request.ProductCreateRequest;
 import com.huuimcm.assignment.domain.product.dto.response.ProductCreateResponse;
+import com.huuimcm.assignment.domain.product.dto.response.ProductListResponse;
 import com.huuimcm.assignment.domain.product.entity.Product;
 import com.huuimcm.assignment.domain.product.repository.ProductRepository;
 import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
+import com.huuimcm.assignment.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,5 +36,11 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
         return ProductCreateResponse.from(savedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductListResponse> getProducts(String sort, int page, int size) {
+        Page<Product> products = productRepository.findProducts(PageRequest.of(page, size), sort);
+        return new PageResponse<>(products.map(ProductListResponse::from));
     }
 }
