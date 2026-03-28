@@ -5,6 +5,7 @@ import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.global.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -16,6 +17,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "likes", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "product_id"})
+}, indexes = {
+        @Index(name = "idx_like_user_created", columnList = "user_id, created_at DESC")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
