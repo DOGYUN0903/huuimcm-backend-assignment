@@ -2,6 +2,7 @@ package com.huuimcm.assignment.domain.product.service;
 
 import com.huuimcm.assignment.domain.product.dto.request.ProductCreateRequest;
 import com.huuimcm.assignment.domain.product.dto.response.ProductCreateResponse;
+import com.huuimcm.assignment.domain.product.dto.response.ProductDetailResponse;
 import com.huuimcm.assignment.domain.product.dto.response.ProductListResponse;
 import com.huuimcm.assignment.domain.product.entity.Product;
 import com.huuimcm.assignment.domain.product.exception.ProductErrorCode;
@@ -44,6 +45,13 @@ public class ProductService {
     public PageResponse<ProductListResponse> getProducts(String sort, int page, int size) {
         Page<Product> products = productRepository.findProducts(PageRequest.of(page, size), sort);
         return new PageResponse<>(products.map(ProductListResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getProductDetail(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        return ProductDetailResponse.from(product);
     }
 
     @Transactional(readOnly = true)
