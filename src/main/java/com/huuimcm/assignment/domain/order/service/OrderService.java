@@ -3,13 +3,12 @@ package com.huuimcm.assignment.domain.order.service;
 import com.huuimcm.assignment.domain.order.dto.request.OrderCreateRequest;
 import com.huuimcm.assignment.domain.order.dto.response.OrderCreateResponse;
 import com.huuimcm.assignment.domain.order.entity.Order;
-import com.huuimcm.assignment.domain.order.exception.OrderErrorCode;
-import com.huuimcm.assignment.domain.order.exception.OrderException;
 import com.huuimcm.assignment.domain.order.repository.OrderRepository;
 import com.huuimcm.assignment.domain.product.entity.Product;
 import com.huuimcm.assignment.domain.product.service.ProductService;
 import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +25,9 @@ public class OrderService {
     public OrderCreateResponse createOrder(String loginId, String loginPw, String idempotencyKey, OrderCreateRequest request) {
         User user = userService.authenticate(loginId, loginPw);
 
-        if (orderRepository.existsByIdempotencyKey(idempotencyKey)) {
-            throw new OrderException(OrderErrorCode.DUPLICATE_ORDER);
+        Optional<Order> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
+        if (existingOrder.isPresent()) {
+            return OrderCreateResponse.from(existingOrder.get());
         }
 
         Order order = Order.create(user, idempotencyKey);
