@@ -56,11 +56,12 @@ class OrderServiceTest {
         void success() {
             // given
             User user = User.create("user1", "encodedPw", "테스트유저");
+            ReflectionTestUtils.setField(user, "id", 1L);
             Product product = Product.create(user, "나이키 에어맥스", "운동화 설명", 159000L, 100, "나이키");
             OrderCreateRequest request = new OrderCreateRequest(List.of(new OrderItemRequest(1L, 2)));
 
             given(userService.authenticate("user1", "password")).willReturn(user);
-            given(orderRepository.findByIdempotencyKey("key-1")).willReturn(Optional.empty());
+            given(orderRepository.findByUserIdAndIdempotencyKey(1L, "key-1")).willReturn(Optional.empty());
             given(productService.getProductWithLock(1L)).willReturn(product);
             given(orderRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
 
@@ -79,11 +80,12 @@ class OrderServiceTest {
         void success_idempotency() {
             // given
             User user = User.create("user1", "encodedPw", "테스트유저");
+            ReflectionTestUtils.setField(user, "id", 1L);
             Order existingOrder = Order.create(user, "key-1");
             OrderCreateRequest request = new OrderCreateRequest(List.of(new OrderItemRequest(1L, 1)));
 
             given(userService.authenticate("user1", "password")).willReturn(user);
-            given(orderRepository.findByIdempotencyKey("key-1")).willReturn(Optional.of(existingOrder));
+            given(orderRepository.findByUserIdAndIdempotencyKey(1L, "key-1")).willReturn(Optional.of(existingOrder));
 
             // when
             OrderCreateResponse response = orderService.createOrder("user1", "password", "key-1", request);
@@ -93,19 +95,44 @@ class OrderServiceTest {
         }
 
         @Test
+        @DisplayName("성공 - 다른 유저의 같은 멱등성 키는 별도 주문으로 처리")
+        void success_sameIdempotencyKeyAcrossDifferentUsers() {
+            // given
+            User seller = User.create("seller", "encodedPw", "판매자");
+            User user = User.create("user2", "encodedPw", "다른유저");
+            ReflectionTestUtils.setField(user, "id", 2L);
+            Product product = Product.create(seller, "상품", "설명", 10000L, 10, "브랜드");
+            OrderCreateRequest request = new OrderCreateRequest(List.of(new OrderItemRequest(1L, 1)));
+
+            given(userService.authenticate("user2", "password")).willReturn(user);
+            given(orderRepository.findByUserIdAndIdempotencyKey(2L, "shared-key")).willReturn(Optional.empty());
+            given(productService.getProductWithLock(1L)).willReturn(product);
+            given(orderRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+            // when
+            OrderCreateResponse response = orderService.createOrder("user2", "password", "shared-key", request);
+
+            // then
+            assertThat(response).isNotNull();
+            verify(orderRepository).findByUserIdAndIdempotencyKey(2L, "shared-key");
+            verify(orderRepository).save(any(Order.class));
+        }
+
+        @Test
         @DisplayName("성공 - 여러 상품 동시 주문")
         void success_multipleItems() {
             // given
             User user = User.create("user1", "encodedPw", "테스트유저");
-            Product product1 = Product.create(user, "상품1", "설명1", 10000L, 50, "브랜드1");
-            Product product2 = Product.create(user, "상품2", "설명2", 20000L, 30, "브랜드2");
+            ReflectionTestUtils.setField(user, "id", 1L);
+            Product product1 = Product.create(user, "상품1", "설명1", 10000L, 50, "브랜드");
+            Product product2 = Product.create(user, "상품2", "설명2", 20000L, 30, "브랜드");
             OrderCreateRequest request = new OrderCreateRequest(List.of(
                     new OrderItemRequest(1L, 2),
                     new OrderItemRequest(2L, 3)
             ));
 
             given(userService.authenticate("user1", "password")).willReturn(user);
-            given(orderRepository.findByIdempotencyKey("key-2")).willReturn(Optional.empty());
+            given(orderRepository.findByUserIdAndIdempotencyKey(1L, "key-2")).willReturn(Optional.empty());
             given(productService.getProductWithLock(1L)).willReturn(product1);
             given(productService.getProductWithLock(2L)).willReturn(product2);
             given(orderRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));

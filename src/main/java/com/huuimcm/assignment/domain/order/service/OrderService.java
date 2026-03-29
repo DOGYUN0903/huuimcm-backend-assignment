@@ -32,9 +32,14 @@ public class OrderService {
     public OrderCreateResponse createOrder(String loginId, String loginPw, String idempotencyKey, OrderCreateRequest request) {
         User user = userService.authenticate(loginId, loginPw);
 
-        Optional<Order> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
+        Optional<Order> existingOrder = orderRepository.findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey);
         if (existingOrder.isPresent()) {
-            log.info("멱등성 키 중복 - 기존 주문 반환: orderId: {}, idempotencyKey: {}", existingOrder.get().getId(), idempotencyKey);
+            log.info(
+                    "중복된 멱등성 키 감지 - 기존 주문 반환: userId={}, orderId={}, idempotencyKey={}",
+                    user.getId(),
+                    existingOrder.get().getId(),
+                    idempotencyKey
+            );
             return OrderCreateResponse.from(existingOrder.get());
         }
 
@@ -47,7 +52,12 @@ public class OrderService {
         });
 
         Order savedOrder = orderRepository.save(order);
-        log.info("주문 생성 성공 - orderId: {}, loginId: {}, totalPrice: {}", savedOrder.getId(), loginId, savedOrder.getTotalPrice());
+        log.info(
+                "주문 생성 성공 - orderId={}, loginId={}, totalPrice={}",
+                savedOrder.getId(),
+                loginId,
+                savedOrder.getTotalPrice()
+        );
         return OrderCreateResponse.from(savedOrder);
     }
 
@@ -66,7 +76,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!order.getUser().getId().equals(user.getId())) {
-            log.warn("주문 접근 거부 - loginId: {}, orderId: {}", loginId, orderId);
+            log.warn("주문 조회 권한 없음 - loginId={}, orderId={}", loginId, orderId);
             throw new OrderException(OrderErrorCode.ORDER_ACCESS_DENIED);
         }
 

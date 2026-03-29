@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,9 +21,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "orders", indexes = {
-        @Index(name = "idx_order_user_created", columnList = "user_id, created_at DESC")
-})
+@Table(
+        name = "orders",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_order_user_idempotency", columnNames = {"user_id", "idempotency_key"})
+        },
+        indexes = {
+                @Index(name = "idx_order_user_created", columnList = "user_id, created_at DESC")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order extends BaseEntity {
@@ -31,7 +38,7 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
 
     @Column(nullable = false)

@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long>, OrderRepositoryCustom {
 
-    Optional<Order> findByIdempotencyKey(String idempotencyKey);
+    Optional<Order> findByUserIdAndIdempotencyKey(Long userId, String idempotencyKey);
 }

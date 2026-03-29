@@ -23,6 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -89,7 +90,6 @@ class OrderControllerTest {
             OrderCreateRequest request = new OrderCreateRequest(
                     List.of(new OrderItemRequest(productId, 1)));
 
-            // 첫 번째 주문
             mockMvc.perform(post("/api/v1/orders")
                     .header("X-Huuim-LoginId", "buyer")
                     .header("X-Huuim-LoginPw", "password123")
@@ -97,7 +97,6 @@ class OrderControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)));
 
-            // 같은 멱등성 키로 재요청
             mockMvc.perform(post("/api/v1/orders")
                             .header("X-Huuim-LoginId", "buyer")
                             .header("X-Huuim-LoginPw", "password123")
@@ -106,6 +105,44 @@ class OrderControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.totalPrice").value(159000));
+        }
+
+        @Test
+        @DisplayName("성공 - 다른 유저의 같은 멱등성 키는 별도 주문으로 처리")
+        void success_sameIdempotencyKeyAcrossDifferentUsers() throws Exception {
+            userService.signup(new UserCreateRequest("buyer2", "password123", "구매자2"));
+
+            Long productId = createProduct();
+            String idempotencyKey = UUID.randomUUID().toString();
+            OrderCreateRequest request = new OrderCreateRequest(
+                    List.of(new OrderItemRequest(productId, 1)));
+
+            String firstResponse = mockMvc.perform(post("/api/v1/orders")
+                            .header("X-Huuim-LoginId", "buyer")
+                            .header("X-Huuim-LoginPw", "password123")
+                            .header("Idempotency-Key", idempotencyKey)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+
+            String secondResponse = mockMvc.perform(post("/api/v1/orders")
+                            .header("X-Huuim-LoginId", "buyer2")
+                            .header("X-Huuim-LoginPw", "password123")
+                            .header("Idempotency-Key", idempotencyKey)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+
+            Long firstOrderId = objectMapper.readTree(firstResponse).get("data").get("id").asLong();
+            Long secondOrderId = objectMapper.readTree(secondResponse).get("data").get("id").asLong();
+
+            assertThat(secondOrderId).isNotEqualTo(firstOrderId);
         }
 
         @Test
