@@ -54,7 +54,7 @@ public class ProductController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductListResponse>>> getProducts(
-            @Parameter(description = "정렬 기준 (latest, price_asc, price_desc, popular)", example = "latest") @RequestParam(defaultValue = "latest") String sort,
+            @Parameter(description = "정렬 기준 (latest, price_asc, likes_desc)", example = "latest") @RequestParam(defaultValue = "latest") String sort,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.success(HttpStatus.OK, "상품 목록을 조회하였습니다", productService.getProducts(sort, page, size));
