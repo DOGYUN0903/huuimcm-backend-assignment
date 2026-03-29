@@ -74,11 +74,13 @@ public class ProductService {
                 .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
+    @CacheEvict(value = "product", key = "#productId")
     @Transactional
     public void increaseLikeCount(Long productId) {
         productRepository.increaseLikeCount(productId);
     }
 
+    @CacheEvict(value = "product", key = "#productId")
     @Transactional
     public void decreaseLikeCount(Long productId) {
         productRepository.decreaseLikeCount(productId);
