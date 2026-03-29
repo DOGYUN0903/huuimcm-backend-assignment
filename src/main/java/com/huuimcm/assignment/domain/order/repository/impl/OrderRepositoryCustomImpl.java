@@ -24,12 +24,11 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 
     @Override
     public Page<Order> findOrdersByUserId(Long userId, Pageable pageable) {
-        List<Order> content = queryFactory
-                .selectFrom(order)
-                .join(order.orderItems, orderItem).fetchJoin()
-                .join(orderItem.product, product).fetchJoin()
+        List<Long> orderIds = queryFactory
+                .select(order.id)
+                .from(order)
                 .where(order.user.id.eq(userId))
-                .orderBy(order.createdAt.desc())
+                .orderBy(order.createdAt.desc(), order.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -38,6 +37,19 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
                 .select(order.count())
                 .from(order)
                 .where(order.user.id.eq(userId));
+
+        if (orderIds.isEmpty()) {
+            return PageableExecutionUtils.getPage(List.of(), pageable, countQuery::fetchOne);
+        }
+
+        List<Order> content = queryFactory
+                .selectDistinct(order)
+                .from(order)
+                .join(order.orderItems, orderItem).fetchJoin()
+                .join(orderItem.product, product).fetchJoin()
+                .where(order.id.in(orderIds))
+                .orderBy(order.createdAt.desc(), order.id.desc())
+                .fetch();
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
