@@ -8,10 +8,12 @@ import com.huuimcm.assignment.domain.user.exception.UserErrorCode;
 import com.huuimcm.assignment.domain.user.exception.UserException;
 import com.huuimcm.assignment.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -22,6 +24,7 @@ public class UserService {
     @Transactional
     public UserCreateResponse signup(UserCreateRequest request) {
         if (userRepository.existsByLoginId(request.loginId())) {
+            log.warn("회원가입 실패 - 중복된 로그인 ID: {}", request.loginId());
             throw new UserException(UserErrorCode.DUPLICATE_LOGIN_ID);
         }
 
@@ -34,6 +37,7 @@ public class UserService {
         );
 
         User savedUser = userRepository.save(user);
+        log.info("회원가입 성공 - loginId: {}", savedUser.getLoginId());
         return UserCreateResponse.from(savedUser);
     }
 
@@ -47,6 +51,7 @@ public class UserService {
     public void changePassword(String loginId, String loginPw, String newPassword) {
         User user = authenticate(loginId, loginPw);
         user.changePassword(passwordEncoder.encode(newPassword));
+        log.info("비밀번호 변경 성공 - loginId: {}", loginId);
     }
 
     /**
@@ -55,9 +60,13 @@ public class UserService {
      */
     public User authenticate(String loginId, String loginPw) {
         User user = userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("인증 실패 - 존재하지 않는 유저: {}", loginId);
+                    return new UserException(UserErrorCode.USER_NOT_FOUND);
+                });
 
         if (!passwordEncoder.matches(loginPw, user.getLoginPw())) {
+            log.warn("인증 실패 - 비밀번호 불일치: {}", loginId);
             throw new UserException(UserErrorCode.INVALID_PASSWORD);
         }
 
