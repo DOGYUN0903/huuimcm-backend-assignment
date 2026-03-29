@@ -13,11 +13,13 @@ import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -32,6 +34,7 @@ public class OrderService {
 
         Optional<Order> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
         if (existingOrder.isPresent()) {
+            log.info("멱등성 키 중복 - 기존 주문 반환: orderId: {}, idempotencyKey: {}", existingOrder.get().getId(), idempotencyKey);
             return OrderCreateResponse.from(existingOrder.get());
         }
 
@@ -44,6 +47,7 @@ public class OrderService {
         });
 
         Order savedOrder = orderRepository.save(order);
+        log.info("주문 생성 성공 - orderId: {}, loginId: {}, totalPrice: {}", savedOrder.getId(), loginId, savedOrder.getTotalPrice());
         return OrderCreateResponse.from(savedOrder);
     }
 
@@ -62,6 +66,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!order.getUser().getId().equals(user.getId())) {
+            log.warn("주문 접근 거부 - loginId: {}, orderId: {}", loginId, orderId);
             throw new OrderException(OrderErrorCode.ORDER_ACCESS_DENIED);
         }
 
