@@ -12,6 +12,8 @@ import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
 import com.huuimcm.assignment.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final UserService userService;
 
+    @CacheEvict(value = "products", allEntries = true)
     @Transactional
     public ProductCreateResponse create(String loginId, String loginPw, ProductCreateRequest request) {
         User seller = userService.authenticate(loginId, loginPw);
@@ -41,12 +44,14 @@ public class ProductService {
         return ProductCreateResponse.from(savedProduct);
     }
 
+    @Cacheable(value = "products", key = "#sort + '_' + #page + '_' + #size")
     @Transactional(readOnly = true)
     public PageResponse<ProductListResponse> getProducts(String sort, int page, int size) {
         Page<Product> products = productRepository.findProducts(PageRequest.of(page, size), sort);
         return new PageResponse<>(products.map(ProductListResponse::from));
     }
 
+    @Cacheable(value = "product", key = "#productId")
     @Transactional(readOnly = true)
     public ProductDetailResponse getProductDetail(Long productId) {
         Product product = productRepository.findById(productId)
