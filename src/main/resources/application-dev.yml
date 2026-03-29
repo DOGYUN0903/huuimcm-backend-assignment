@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: assignment
+  # 실제 운영 환경에서는 .env 파일로 민감 정보를 분리해야 하지만,
+  # 과제 평가 편의성을 위해 하드코딩하였습니다.
+  datasource:
+    url: jdbc:mysql://mysql:3306/huuimcm?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: huuimcm
+    password: huuimcm1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
