@@ -12,6 +12,7 @@ import com.huuimcm.assignment.domain.user.entity.User;
 import com.huuimcm.assignment.domain.user.service.UserService;
 import com.huuimcm.assignment.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -41,6 +43,7 @@ public class ProductService {
         );
 
         Product savedProduct = productRepository.save(product);
+        log.info("상품 등록 성공 - productId: {}, name: {}, seller: {}", savedProduct.getId(), savedProduct.getName(), loginId);
         return ProductCreateResponse.from(savedProduct);
     }
 
